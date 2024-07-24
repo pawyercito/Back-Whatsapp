@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat App</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+      const socket = io();
+
+      document.getElementById('joinChatBtn').addEventListener('click', () => {
+        const chatId = document.getElementById('chatId').value;
+        socket.emit('joinChat', chatId);
+      });
+
+      document.getElementById('sendMessageBtn').addEventListener('click', async () => {
+        const chatId = document.getElementById('chatId').value;
+        const userId = document.getElementById('userId').value;
+        const description = document.getElementById('message').value;
+        const multimediaInput = document.getElementById('multimedia');
+[]
+        const formData = new FormData();
+        formData.append('chatId', chatId);
+        formData.append('userId', userId);
+        formData.append('description', description);
+
+        if (multimediaInput.files.length > 0) {
+          formData.append('multimedia', multimediaInput.files[0]);
+        }
+
+        try {
+          const response = await fetch('/api/messages/multimedia', {
+            method: 'POST',
+            body: formData
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            console.log('Mensaje enviado exitosamente');
+            // Optionally, you can update the UI here
+          } else {
+            console.error('Error al enviar el mensaje:', result.message);
+          }
+        } catch (error) {
+          console.error('Error en la solicitud:', error);
+        }
+      });
+
+      socket.on('receiveMessage', (data) => {
+        const messagesContainer = document.getElementById('messages');
+        const messageElement = document.createElement('div');
+
+        if (data.multimedia) {
+          const img = document.createElement('img');
+          img.src = data.multimedia;
+          img.style.maxWidth = '300px'; // Ajusta el tamaño según sea necesario
+          messageElement.appendChild(img);
+        }
+
+        messageElement.innerHTML += `<div>User ${data.idUser}: ${data.description}</div>`;
+        messagesContainer.appendChild(messageElement);
+      });
+    });
+  </script>
+</head>
+<body>
+  <h1>Chat App</h1>
+  <div>
+    <label for="chatId">Chat Id:</label>
+    <input type="text" id="chatId" required>
+    <button id="joinChatBtn">Join Chat</button>
+  </div>
+  <div>
+    <label for="userId">User Id:</label>
+    <input type="text" id="userId" required>
+  </div>
+  <div>
+    <label for="message">Message:</label>
+    <input type="text" id="message" required>
+  </div>
+  <div>
+    <label for="multimedia">Upload Multimedia:</label>
+    <input type="file" id="multimedia" accept="image/*,audio/*">
+  </div>
+  <button id="sendMessageBtn">Send Message</button>
+  <div id="messages"></div>
+</body>
+</html>
