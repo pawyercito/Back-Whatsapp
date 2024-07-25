@@ -159,7 +159,8 @@ export const handleMultimediaMessage = async (req, res) => {
                 multimedia: multimediaData ? {
                     url: multimediaData.url,
                     type: multimediaData.type
-                } : null
+                } : null,
+                createdAt: message.createdAt
             };
 
             io.to(chatId).emit('receiveMessage', messageToSend);
@@ -182,7 +183,8 @@ export const handleMultimediaMessage = async (req, res) => {
                     multimedia: multimediaData ? {
                         url: multimediaData.url,
                         type: multimediaData.type
-                    } : null
+                    } : null,
+                    createdAt: message.createdAt
                 }
             });
         } catch (error) {

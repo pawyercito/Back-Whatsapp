@@ -92,7 +92,8 @@ router.get('/my-chats', authenticateUser, async (req, res) => {
                     multimedia: chatMessage.idMessage.idMultimedia ? {
                         url: chatMessage.idMessage.idMultimedia.url,
                         type: chatMessage.idMessage.idMultimedia.idTypeMultimedia.type
-                    } : null
+                    } : null,
+                    createdAt: chatMessage.idMessage.createdAt // Incluye createdAt en los mensajes
                 }));
 
             const noVistos = messages.filter(message => !message.visto).length;
@@ -108,7 +109,8 @@ router.get('/my-chats', authenticateUser, async (req, res) => {
                 users: users,
                 status: chat.status,
                 messages: messages,
-                no_vistos: noVistos
+                no_vistos: noVistos,
+                createdAt: chat.createdAt // Incluye createdAt en los chats
             };
         }));
 
@@ -125,6 +127,7 @@ router.get('/my-chats', authenticateUser, async (req, res) => {
         });
     }
 });
+
 
 
 // Endpoint para verificar si un chat privado ya existe
