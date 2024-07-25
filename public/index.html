@@ -19,7 +19,7 @@
         const userId = document.getElementById('userId').value;
         const description = document.getElementById('message').value;
         const multimediaInput = document.getElementById('multimedia');
-[]
+
         const formData = new FormData();
         formData.append('chatId', chatId);
         formData.append('userId', userId);
@@ -53,13 +53,22 @@
         const messageElement = document.createElement('div');
 
         if (data.multimedia) {
-          const img = document.createElement('img');
-          img.src = data.multimedia;
-          img.style.maxWidth = '300px'; // Ajusta el tamaño según sea necesario
-          messageElement.appendChild(img);
+          const multimediaElement = document.createElement('div');
+          if (data.multimedia.type === 'image') {
+            const img = document.createElement('img');
+            img.src = data.multimedia.url;
+            img.style.maxWidth = '300px'; // Ajusta el tamaño según sea necesario
+            multimediaElement.appendChild(img);
+          } else if (data.multimedia.type === 'audio') {
+            const audio = document.createElement('audio');
+            audio.controls = true;
+            audio.src = data.multimedia.url;
+            multimediaElement.appendChild(audio);
+          }
+          messageElement.appendChild(multimediaElement);
         }
 
-        messageElement.innerHTML += `<div>User ${data.idUser}: ${data.description}</div>`;
+        messageElement.innerHTML += `<div>User ${data.sender.username}: ${data.description}</div>`;
         messagesContainer.appendChild(messageElement);
       });
     });
