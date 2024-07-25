@@ -31,7 +31,7 @@ export const handleEstadoUpload = async (req, res) => {
             return res.status(500).json({ message: 'Error parsing form data' });
         }
 
-        const { userId, description } = fields;
+        const { description } = fields;
         const multimediaFiles = files.multimedia || [];
 
         try {
@@ -60,20 +60,27 @@ export const handleEstadoUpload = async (req, res) => {
             }
 
             const estado = new Estado({
-                idUser: userId,
+                idUser: req.user._id, // Usa el userId del middleware de autenticación
                 description: descriptionString,
                 idMultimedia: multimediaData ? multimediaData._id : null
             });
 
             await estado.save();
 
-            res.status(201).json({ message: 'Estado subido exitosamente' });
+            res.status(201).json({
+                message: { description: 'Estado subido exitosamente', code: 0 },
+                data: estado // Incluye el estado creado en la respuesta
+            });
         } catch (error) {
             console.error('Error manejando el estado:', error);
-            res.status(500).json({ message: 'Error al subir el estado' });
+            res.status(500).json({
+                message: { description: 'Error al subir el estado', code: 1 },
+                data: null
+            });
         }
     });
 };
+
 
 
 export const handleMultimediaMessage = async (req, res) => {

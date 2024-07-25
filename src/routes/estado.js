@@ -10,6 +10,7 @@ const router = express.Router();
 // Endpoint para subir un nuevo estado
 router.post('/upload', authenticateUser, handleEstadoUpload);
 
+
 // Endpoint para obtener los estados de los amigos del usuario autenticado
 router.get('/friends-states', authenticateUser, async (req, res) => {
     try {
@@ -27,18 +28,27 @@ router.get('/friends-states', authenticateUser, async (req, res) => {
         const friends = friendList.friends.map(friend => friend._id);
 
         // Encuentra todos los estados de los amigos
-        const estados = await Estado.find({ idUser: { $in: friends } })
+        const friendStates = await Estado.find({ idUser: { $in: friends } })
             .populate('idUser', 'username')
             .populate('idMultimedia', 'url');
 
-        const estadosData = estados.map(estado => ({
+        // Encuentra todos los estados del usuario autenticado
+        const userStates = await Estado.find({ idUser: userId })
+            .populate('idUser', 'username')
+            .populate('idMultimedia', 'url');
+
+        // Combina los estados de amigos y del usuario autenticado
+        const estadosData = [...friendStates, ...userStates].map(estado => ({
             description: estado.description,
-            multimedia: estado.idMultimedia ? estado.idMultimedia.url : null
+            multimedia: estado.idMultimedia ? estado.idMultimedia.url : null,
+            username: estado.idUser.username
         }));
 
         res.status(200).json({
             message: { description: 'Estados obtenidos exitosamente', code: 0 },
-            data: estadosData
+            data: {
+                states: estadosData
+            }
         });
     } catch (error) {
         console.error('Error al obtener los estados:', error);
@@ -47,5 +57,7 @@ router.get('/friends-states', authenticateUser, async (req, res) => {
         });
     }
 });
+
+
 
 export default router;
