@@ -119,6 +119,7 @@ export const handleMultimediaMessage = async (req, res) => {
                 await multimedia.save();
 
                 multimediaData = {
+                    _id: multimedia._id,
                     url: multimedia.url,
                     type: typeMultimedia.type
                 };
@@ -155,7 +156,10 @@ export const handleMultimediaMessage = async (req, res) => {
                     username: user.username,
                     id: userId
                 },
-                multimedia: multimediaData ? multimediaData : null
+                multimedia: multimediaData ? {
+                    url: multimediaData.url,
+                    type: multimediaData.type
+                } : null
             };
 
             io.to(chatId).emit('receiveMessage', messageToSend);
@@ -175,7 +179,10 @@ export const handleMultimediaMessage = async (req, res) => {
                         username: user.username,
                         id: userId
                     },
-                    multimedia: multimediaData ? multimediaData : null
+                    multimedia: multimediaData ? {
+                        url: multimediaData.url,
+                        type: multimediaData.type
+                    } : null
                 }
             });
         } catch (error) {
@@ -190,3 +197,4 @@ export const handleMultimediaMessage = async (req, res) => {
         }
     });
 };
+
