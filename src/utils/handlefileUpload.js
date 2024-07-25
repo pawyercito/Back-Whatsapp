@@ -91,20 +91,12 @@ export const handleMultimediaMessage = async (req, res) => {
 
             if (multimediaFiles.length > 0) {
                 const file = multimediaFiles[0];
-                let type;
-                if (file.mimetype.startsWith('image/')) {
-                    type = 'image';
-                } else if (['audio/mpeg', 'audio/mp3'].includes(file.mimetype)) {
-                    type = 'audio';
-                } else {
-                    throw new Error('Tipo de archivo no soportado');
-                }
-
+                const type = file.mimetype.includes('image') ? 'image' : 'audio'; // Adjust according to your needs
                 const url = await handleFileUpload(file, type);
 
                 const typeMultimedia = await TypeMultimedia.findOne({ type });
                 if (!typeMultimedia) {
-                    throw new Error('Tipo de multimedial no encontrado');
+                    throw new Error('Tipo de multimedia no encontrado');
                 }
 
                 const multimedia = new Multimedia({
@@ -141,7 +133,7 @@ export const handleMultimediaMessage = async (req, res) => {
                 idMessage: message._id,
                 description: messageDescription,
                 idUser: userId,
-                multimedia: multimediaData ? multimediaData.url : null
+                multimedia: multimediaData ? (multimediaData.type === 'image' ? 'image' : 'audio') : null
             });
 
             // Crear el objeto con todos los campos del mensaje para enviar en la respuesta
@@ -150,7 +142,8 @@ export const handleMultimediaMessage = async (req, res) => {
                 idMessage: message._id,
                 description: messageDescription,
                 idUser: userId,
-                multimedia: multimediaData ? multimediaData.url : null,
+                multimedia: multimediaData ? (multimediaData.type === 'image' ? 'image' : 'audio') : null,
+                idTypeMultimedia: multimediaData ? multimediaData.idTypeMultimedia : null,
                 ...message.toObject() // Spread operator to include all message fields
             };
 
@@ -159,9 +152,8 @@ export const handleMultimediaMessage = async (req, res) => {
 
             res.status(201).json(messageToSend); // Enviar todos los campos del mensaje junto con la respuesta de éxito
         } catch (error) {
-            console.error('Error handling multimediall mensaje:', error);
+            console.error('Error handling multimedia message:', error);
             res.status(500).json({ message: 'Error al enviar el mensaje' });
         }
     });
-
 };
