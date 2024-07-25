@@ -81,8 +81,6 @@ export const handleEstadoUpload = async (req, res) => {
     });
 };
 
-
-
 export const handleMultimediaMessage = async (req, res) => {
     const form = formidable({ multiples: true });
 
@@ -132,7 +130,6 @@ export const handleMultimediaMessage = async (req, res) => {
                 idUser: userId,
                 description: messageDescription,
                 idMultimedia: multimediaData ? multimediaData._id : null,
-                idTypeMultimedia: multimediaData ? multimediaData.idTypeMultimedia : null,
                 visto: false
             });
 
@@ -170,7 +167,16 @@ export const handleMultimediaMessage = async (req, res) => {
                     description: 'Mensaje enviado exitosamente',
                     code: 0
                 },
-                data: messageToSend
+                data: {
+                    idChat: chatId,
+                    idMessage: message._id,
+                    description: messageDescription,
+                    sender: {
+                        username: user.username,
+                        id: userId
+                    },
+                    multimedia: multimediaData ? multimediaData : null
+                }
             });
         } catch (error) {
             console.error('Error handling multimedia message:', error);
