@@ -28,14 +28,21 @@ const PORT = process.env.PORT ?? 4000;
 // Conexión a la base de datos
 await connectDB();
 
+app.use(
+  cors({
+      origin: function (origin, callback) {
+          return callback(null, true);
+      }
+  })
+)
 // Middleware para parsear JSON y manejar CORS
-app.use(cors());
 app.use(express.json());
 
 // Sirve el archivo HTML desde la carpeta 'public'
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, 'public')));
+
 
 // Configura rutas de API
 app.use('/api/estados', estadoRoutes);
@@ -103,76 +110,4 @@ io.on('connection', (socket) => {
 
 server.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
-});
-
-// Ruta para obtener chats y mensajes
-app.get('/api/chats/:chatId/messages', async (req, res) => {
-    const { chatId } = req.params;
-
-    try {
-        const chat = await Chat.findById(chatId).populate({
-            path: 'users',
-            select: 'username _id'
-        });
-
-        if (!chat) {
-            return res.status(404).json({
-                message: {
-                    description: 'Chat no encontrado',
-                    code: 1
-                }
-            });
-        }
-
-        const messages = await ChatMessage.find({ idChat: chatId }).populate({
-            path: 'idMessage',
-            populate: {
-                path: 'idUser',
-                select: 'username'
-            }
-        }).populate({
-            path: 'idMessage',
-            populate: {
-                path: 'idMultimedia',
-                select: 'url'
-            }
-        });
-
-        const formattedMessages = messages.map(chatMessage => {
-            const message = chatMessage.idMessage;
-            return {
-                description: typeof message.description === 'string' ? message.description : JSON.parse(message.description).join(' '),
-                visto: message.visto,
-                sender: message.idUser.username,
-                multimedia: message.idMultimedia ? message.idMultimedia.url : null
-            };
-        });
-
-        res.status(200).json({
-            message: {
-                description: 'Chats obtenidos exitosamente',
-                code: 0
-            },
-            data: {
-                name: chat.name,
-                users: chat.users.map(user => ({
-                    _id: {
-                        username: user.username,
-                        id: user._id
-                    }
-                })),
-                status: chat.status,
-                messages: formattedMessages,
-                no_vistos: formattedMessages.filter(msg => !msg.visto).length
-            }
-        });
-    } catch (error) {
-        console.error('Error fetching chat messages:', error);
-        res.status(500).json({
-            message: {
-                description: 'Error al obtener los mensajes del chat',
-                code: 1
-            }
-        });
-    }
 });
