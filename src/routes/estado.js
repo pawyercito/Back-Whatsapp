@@ -19,7 +19,7 @@ router.get('/friends-states', authenticateUser, async (req, res) => {
 
         // Encuentra los estados del usuario autenticado
         const userStates = await Estado.find({ idUser: userId })
-            .populate('idUser', 'username')
+            .populate('idUser', 'username profile.profile_picture')
             .populate('idMultimedia', 'url');
 
         // Encuentra el documento de amigos del usuario autenticado
@@ -31,7 +31,7 @@ router.get('/friends-states', authenticateUser, async (req, res) => {
             const friends = friendList.friends.map(friend => friend._id);
             // Encuentra todos los estados de los amigos
             friendStates = await Estado.find({ idUser: { $in: friends } })
-                .populate('idUser', 'username')
+                .populate('idUser', 'username profile.profile_picture')
                 .populate('idMultimedia', 'url');
         }
 
@@ -47,14 +47,16 @@ router.get('/friends-states', authenticateUser, async (req, res) => {
 
         // Agrupar estados por usuario
         const estadosData = allStates.reduce((acc, estado) => {
-            const { _id: estadoUserId, username } = estado.idUser;
+            const { _id: estadoUserId, username, profile } = estado.idUser;
             const { description } = estado;
             const multimedia = estado.idMultimedia ? estado.idMultimedia.url : null;
+            const profile_picture = profile ? profile.profile_picture : null;
 
             if (!acc[estadoUserId]) {
                 acc[estadoUserId] = {
                     username,
                     id: estadoUserId,
+                    profile_picture,
                     states: []
                 };
             }
@@ -86,6 +88,7 @@ router.get('/friends-states', authenticateUser, async (req, res) => {
         });
     }
 });
+
 
 
 
