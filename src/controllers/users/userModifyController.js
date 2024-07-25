@@ -20,34 +20,27 @@ export const modify = async (req, res) => {
     }
 
     const { bio, website, location, username, email, password } = fields;
-    let profilePicture = files.profile_picture ? files.profile_picture : null;
+    let fileToUpload = files.profile_picture ? files.profile_picture : null;
 
-    // Verifica que req.user.id esté definido
     if (!req.user.id) return res.status(401).json({ msg: 'No autorizado' });
 
     try {
       const user = await User.findById(req.user.id);
       if (!user) return res.status(404).json({ msg: 'Usuario no encontrado' });
 
-      // Actualiza los campos del perfil solo si están presentes en la solicitud
+      // Update profile fields if they are provided
       if (bio !== undefined) user.profile.bio = bio;
       if (website !== undefined) user.profile.website = website;
       if (location !== undefined) user.profile.location = location;
-      if (username !== undefined && !Array.isArray(username)) user.username = String(username);
-      if (email !== undefined && !Array.isArray(email)) user.email = String(email);
+      if (username !== undefined) user.username = username;
+      if (email !== undefined) user.email = email;
 
-      // Si se proporciona una nueva contraseña, actualizarla
-      if (password && !Array.isArray(password)) {
-        user.password = String(password); // Asigna la nueva contraseña directamente
-      }
-
-      // Prepara profilePicture para su uso, manejando el caso en que pueda ser un array
-      let fileToUpload;
-      if (Array.isArray(profilePicture) && profilePicture.length > 0) {
-        fileToUpload = profilePicture[0]; // Accede al primer elemento si profilePicture es un array
-      } else {
-        fileToUpload = profilePicture; // Usa directamente profilePicture si no es un array
-      }
+      // Assuming `password` is extracted from `fields`
+if (password !== undefined) {
+  // Check if password is an array and extract the first element as the password
+  const newPassword = Array.isArray(password) ? password[0] : password;
+  user.password = newPassword; // Make sure to hash the password if necessary before saving
+}
 
       if (fileToUpload && fileToUpload.filepath) {
         // Generar un nombre de archivo único
@@ -79,9 +72,9 @@ export const modify = async (req, res) => {
         }
       }
 
-      await user.save(); // Guarda el usuario. El middleware pre('save') se encargará del hash
+      // Save the user after all updates
+      await user.save();
 
-      // Envía un mensaje de éxito
       res.json({
         message: {
           description: 'Perfil modificado correctamente',

@@ -26,7 +26,7 @@ router.delete('/delete-account', authenticateUser,  remove);
 router.get('/user/:id', getUserById);
 
 // Obtener todos los usuarios
-router.get('/users', getAllUsers);
+router.get('/users', authenticateUser, getAllUsers);
 
   
 
