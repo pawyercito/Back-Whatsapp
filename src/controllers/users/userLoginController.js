@@ -12,7 +12,7 @@ export const login = async (req, res) => {
     if (!user) {
       return res.status(400).json({
         message: {
-          description: 'Credenciales incorrectas',
+          description: 'Incorrect credentials',
           code: 1
         }
       });
@@ -22,7 +22,7 @@ export const login = async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({
         message: {
-          description: 'Credenciales incorrectas',
+          description: 'Incorrect credentials',
           code: 1
         }
       });
@@ -41,7 +41,7 @@ export const login = async (req, res) => {
 
     res.json({
       message: {
-        description: 'Has iniciado sesión correctamente',
+        description: 'Login successful',
         code: 0
       },
       data: {

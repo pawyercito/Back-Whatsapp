@@ -81,7 +81,7 @@ export const modify = async (req, res) => {
 
       res.json({
         message: {
-          description: 'Perfil modificado correctamente',
+          description: 'Profile updated successfully',
           code: 0
         },
       });

@@ -41,7 +41,7 @@ router.get('/friends-states', authenticateUser, async (req, res) => {
         // Si no hay estados en absoluto
         if (allStates.length === 0) {
             return res.status(404).json({
-                message: { description: 'No tiene amigos y no ha subido estados', code: 1 }
+                message: { description: 'You dont have friends or states', code: 1 }
             });
         }
 
@@ -76,15 +76,15 @@ router.get('/friends-states', authenticateUser, async (req, res) => {
         const sortedEstadosArray = estadosArray.sort((a) => (a.id === userId ? -1 : 1));
 
         res.status(200).json({
-            message: { description: 'Estados obtenidos exitosamente', code: 0 },
+            message: { description: 'States correctly obtained', code: 0 },
             data: {
                 states: sortedEstadosArray
             }
         });
     } catch (error) {
-        console.error('Error al obtener los estados:', error);
+        console.error('Error :', error);
         res.status(500).json({
-            message: { description: 'Error al obtener los estados', error, code: 1 }
+            message: { description: 'Error', error, code: 1 }
         });
     }
 });

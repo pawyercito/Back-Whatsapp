@@ -8,7 +8,7 @@ export const getAllFriends = async (req, res) => {
     if (!userFriends) {
       return res.status(404).json({
         message: {
-          description: 'El usuario no tiene amigos',
+          description: 'This user has no friends',
           code: 1
         }
       });
@@ -16,7 +16,7 @@ export const getAllFriends = async (req, res) => {
 
     res.json({
       message: {
-        description: 'Amigos obtenidos correctamente',
+        description: 'Friends obtained successfully',
         code: 0
       },
       data: userFriends.friends

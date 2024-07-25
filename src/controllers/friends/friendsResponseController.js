@@ -8,7 +8,7 @@ export const respondToFriendRequest = async (req, res) => {
     if (!userIds || !Array.isArray(userIds)) {
       return res.status(400).json({
         message: {
-          description: 'Solicitud inválida. Se requiere un array de userIds',
+          description: 'Invalid request. userIds must be an array',
           code: 1
         }
       });
@@ -24,7 +24,7 @@ export const respondToFriendRequest = async (req, res) => {
     if (friendRequests.length === 0) {
       return res.status(404).json({
         message: {
-          description: 'No se encontraron solicitudes de amistad pendientes para los userIds proporcionados',
+          description: 'Friends requests not found',
           code: 1
         }
       });

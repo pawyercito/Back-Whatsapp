@@ -169,7 +169,7 @@ export const handleMultimediaMessage = async (req, res) => {
 
             res.status(201).json({
                 message: {
-                    description: 'Mensaje enviado exitosamente',
+                    description: 'Message sent successfully',
                     code: 0
                 },
                 data: {

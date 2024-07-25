@@ -19,7 +19,7 @@ export const getAllUsers = async (req, res) => {
 
     res.json({
       message: {
-        description: 'Usuarios obtenidos correctamente',
+        description: 'Users correctly obtained',
         code: 0
       },
       data: users

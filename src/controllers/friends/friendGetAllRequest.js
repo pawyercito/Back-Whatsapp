@@ -8,7 +8,7 @@ export const getFriendRequests = async (req, res) => {
   
       res.json({
         message: {
-          description: 'Solicitudes de amistad obtenidas correctamente',
+          description: 'Friend requests obtained successfully',
           code: 0
         },
         data: friendRequests

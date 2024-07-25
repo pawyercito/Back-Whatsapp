@@ -25,7 +25,7 @@ export const addFriends = async (req, res) => {
       });
 
       if (existingRequest && existingRequest.status === 'pending') {
-        warningDescriptions.push(`Ya existe una solicitud de amistad pendiente para el usuario`);
+        warningDescriptions.push(`Already sent a friend request to this person`);
         continue; // Skip this friendId if a pending request already exists
       }
 
@@ -43,7 +43,7 @@ export const addFriends = async (req, res) => {
     if (warningDescriptions.length > 0) {
       return res.json({
         message: {
-          description: `Algunas solicitudes de amistad no se pudieron enviar: ${warningDescriptions.join(', ')}`,
+          description: `Some of your friend requests could not be sent: ${warningDescriptions.join(', ')}`,
           code: 3
         }
       });
@@ -51,7 +51,7 @@ export const addFriends = async (req, res) => {
 
     res.json({
       message: {
-        description: 'Solicitudes de amistad enviadas correctamente',
+        description: 'Friends request sent successfully',
         code: 0
       }
     });

@@ -117,7 +117,7 @@ router.get('/my-chats', authenticateUser, async (req, res) => {
         console.log('Chat con mensajes:', chatWithMessages);
 
         res.status(200).json({
-            message: { description: 'Chats obtenidos exitosamente', code: 0 },
+            message: { description: 'Chats obtained successfully', code: 0 },
             data: chatWithMessages
         });
     } catch (error) {

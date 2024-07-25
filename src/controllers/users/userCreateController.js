@@ -28,7 +28,7 @@ export const register = async (req, res) => {
     if (!username || !email || !password) {
       return res.status(400).json({
         message: {
-          description: 'Faltan campos requeridos o los campos no son válidos',
+          description: 'Missing fields or invalid fields',
           code: 1
         }
       });
@@ -41,7 +41,7 @@ export const register = async (req, res) => {
     if (existingUser) {
       return res.status(409).json({
         message: {
-          description: 'El usuario ya existe. Por favor, utiliza otro nombre de usuario o correo electrónico.',
+          description: 'This user already exists.',
           code: 1 // Código personalizado para indicar duplicidad
         }
       });
@@ -81,7 +81,7 @@ export const register = async (req, res) => {
 
       const responseMessage = {
         message: {
-          description: 'Usuario creado correctamente',
+          description: 'User created successfully',
           code: 0
         },
         data: {
@@ -95,7 +95,7 @@ export const register = async (req, res) => {
       if (error.code === 11000 || error.code === 11001) { // Código de error para duplicados en MongoDB
         return res.status(409).json({
           message: {
-            description: 'El usuario ya existe. Por favor, utiliza otro nombre de usuario o correo electrónico.',
+            description: 'This user already exists, please try again.',
             code: 2 // Código personalizado para indicar duplicidad
           }
         });
