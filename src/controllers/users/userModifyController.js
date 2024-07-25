@@ -84,7 +84,6 @@ export const modify = async (req, res) => {
           description: 'Perfil modificado correctamente',
           code: 0
         },
-        data: updatedUser.profile // Include updated user profile in response
       });
     } catch (error) {
       console.error(error);

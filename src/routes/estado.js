@@ -17,45 +17,49 @@ router.get('/friends-states', authenticateUser, async (req, res) => {
     try {
         const userId = req.user._id;
 
-        // Encuentra el documento de amigos del usuario autenticado
-        const friendList = await Friends.findOne({ idUser: userId }).populate('friends');
-
-        if (!friendList) {
-            return res.status(404).json({
-                message: { description: 'No se encontraron amigos', code: 1 }
-            });
-        }
-
-        const friends = friendList.friends.map(friend => friend._id);
-
-        // Encuentra todos los estados de los amigos
-        const friendStates = await Estado.find({ idUser: { $in: friends } })
-            .populate('idUser', 'username')
-            .populate('idMultimedia', 'url');
-
-        // Encuentra todos los estados del usuario autenticado
+        // Encuentra los estados del usuario autenticado
         const userStates = await Estado.find({ idUser: userId })
             .populate('idUser', 'username')
             .populate('idMultimedia', 'url');
 
-        // Combina los estados de amigos y del usuario autenticado
-        const allStates = [...friendStates, ...userStates];
+        // Encuentra el documento de amigos del usuario autenticado
+        const friendList = await Friends.findOne({ idUser: userId }).populate('friends');
+
+        let friendStates = [];
+
+        if (friendList) {
+            const friends = friendList.friends.map(friend => friend._id);
+            // Encuentra todos los estados de los amigos
+            friendStates = await Estado.find({ idUser: { $in: friends } })
+                .populate('idUser', 'username')
+                .populate('idMultimedia', 'url');
+        }
+
+        // Combina los estados del usuario autenticado y de amigos
+        const allStates = [...userStates, ...friendStates];
+
+        // Si no hay estados en absoluto
+        if (allStates.length === 0) {
+            return res.status(404).json({
+                message: { description: 'No tiene amigos y no ha subido estados', code: 1 }
+            });
+        }
 
         // Agrupar estados por usuario
         const estadosData = allStates.reduce((acc, estado) => {
-            const { _id: userId, username } = estado.idUser;
+            const { _id: estadoUserId, username } = estado.idUser;
             const { description } = estado;
             const multimedia = estado.idMultimedia ? estado.idMultimedia.url : null;
 
-            if (!acc[userId]) {
-                acc[userId] = {
+            if (!acc[estadoUserId]) {
+                acc[estadoUserId] = {
                     username,
-                    id: userId,
+                    id: estadoUserId,
                     states: []
                 };
             }
 
-            acc[userId].states.push({
+            acc[estadoUserId].states.push({
                 description,
                 multimedia
             });
@@ -66,10 +70,13 @@ router.get('/friends-states', authenticateUser, async (req, res) => {
         // Convertir el objeto de estados agrupados en un array
         const estadosArray = Object.values(estadosData);
 
+        // Ordenar los estados para que el estado del usuario autenticado esté primero
+        const sortedEstadosArray = estadosArray.sort((a) => (a.id === userId ? -1 : 1));
+
         res.status(200).json({
             message: { description: 'Estados obtenidos exitosamente', code: 0 },
             data: {
-                states: estadosArray
+                states: sortedEstadosArray
             }
         });
     } catch (error) {
@@ -79,6 +86,7 @@ router.get('/friends-states', authenticateUser, async (req, res) => {
         });
     }
 });
+
 
 
 
