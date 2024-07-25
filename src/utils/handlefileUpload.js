@@ -7,7 +7,7 @@ import Multimedia from '../../src/models/Multimedia.js';
 import TypeMultimedia from '../../src/models/TypeMultimedia.js';
 import Message from '../../src/models/Message.js';
 import ChatMessage from '../../src/models/ChatMessage.js'; // Import ChatMessage model
-import { io } from '../../server.js'; // Adjust the path based on your project structure
+import { io } from '../../app.js'; // Adjust the path based on your project structure
 import Estado from '../../src/models/Estado.js'; // Importar modelo Estado
 
 const handleFileUpload = async (file, type) => {
