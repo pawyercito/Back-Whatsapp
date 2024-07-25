@@ -133,7 +133,7 @@ export const handleMultimediaMessage = async (req, res) => {
                 idMessage: message._id,
                 description: messageDescription,
                 idUser: userId,
-                multimedia: multimediaData ? (multimediaData.type === 'image' ? 'image' : 'audio') : null
+                multimedia: multimediaData ? multimediaData.url : null
             });
 
             // Crear el objeto con todos los campos del mensaje para enviar en la respuesta
@@ -142,8 +142,7 @@ export const handleMultimediaMessage = async (req, res) => {
                 idMessage: message._id,
                 description: messageDescription,
                 idUser: userId,
-                multimedia: multimediaData ? (multimediaData.type === 'image' ? 'image' : 'audio') : null,
-                idTypeMultimedia: multimediaData ? multimediaData.idTypeMultimedia : null,
+                multimedia: multimediaData ? multimediaData.url : null,
                 ...message.toObject() // Spread operator to include all message fields
             };
 
