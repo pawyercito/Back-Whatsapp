@@ -1,4 +1,3 @@
-// server.js
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
@@ -9,16 +8,24 @@ import friendsRoutes from './src/routes/friends.js';
 import Chat from './src/models/Chat.js';
 import Message from './src/models/Message.js';
 import ChatMessage from './src/models/ChatMessage.js';
+import Multimedia from './src/models/Multimedia.js'; // Import Multimedia model
 import path from 'path';
 import cors from 'cors';
+import { fileURLToPath } from 'url';
+import chatRoutes from './src/routes/chats.js';
+import { handleMultimediaMessage } from './src/utils/handlefileUpload.js'; // Importa el manejador de mensajes multimedia
+import estadoRoutes from './src/routes/estado.js';
 
+// Configura dotenv para las variables de entorno
 configDotenv();
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+// After initializing io
+export const io = new Server(server);
 const PORT = process.env.PORT ?? 4000;
 
+// Conexión a la base de datos
 await connectDB();
 
 // Middleware para parsear JSON y manejar CORS
@@ -26,12 +33,18 @@ app.use(cors());
 app.use(express.json());
 
 // Sirve el archivo HTML desde la carpeta 'public'
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Configura rutas de API
+app.use('/api/estados', estadoRoutes);
+app.use('/api/chats', chatRoutes);
 app.use('/api/friends', friendsRoutes);
 app.use('/api/users', userRoutes);
+
+// Ruta para manejar mensajes multimedia
+app.post('/api/messages/multimedia', handleMultimediaMessage);
 
 // Ruta principal para verificar el servidor
 app.get('/', (req, res) => {
@@ -49,28 +62,38 @@ io.on('connection', (socket) => {
 
   socket.on('sendMessage', async (data) => {
     const { chatId, userId, description } = data;
+    console.log('Datos recibidos en sendMessage:', data);
 
-    const message = new Message({
-      idUser: userId,
-      description: description,
-      visto: false
-    });
+    try {
+      const messageDescription = typeof description === 'string' ? description : description.toString();
 
-    await message.save();
+      const message = new Message({
+        idUser: userId,
+        description: messageDescription,
+        visto: false
+      });
 
-    const chatMessage = new ChatMessage({
-      idChat: chatId,
-      idMessage: message._id
-    });
+      await message.save();
+      console.log('Mensaje guardado:', message);
 
-    await chatMessage.save();
+      const chatMessage = new ChatMessage({
+        idChat: chatId,
+        idMessage: message._id
+      });
 
-    io.to(chatId).emit('receiveMessage', {
-      idChat: chatId,
-      idMessage: message._id,
-      description: description,
-      idUser: userId
-    });
+      await chatMessage.save();
+      console.log('ChatMessage guardado:', chatMessage);
+
+      io.to(chatId).emit('receiveMessage', {
+        idChat: chatId,
+        idMessage: message._id,
+        description: messageDescription,
+        idUser: userId,
+        multimedia: null // No hay multimedia en este caso
+      });
+    } catch (error) {
+      console.error('Error guardando el mensaje:', error);
+    }
   });
 
   socket.on('disconnect', () => {
@@ -80,4 +103,76 @@ io.on('connection', (socket) => {
 
 server.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
+});
+
+// Ruta para obtener chats y mensajes
+app.get('/api/chats/:chatId/messages', async (req, res) => {
+    const { chatId } = req.params;
+
+    try {
+        const chat = await Chat.findById(chatId).populate({
+            path: 'users',
+            select: 'username _id'
+        });
+
+        if (!chat) {
+            return res.status(404).json({
+                message: {
+                    description: 'Chat no encontrado',
+                    code: 1
+                }
+            });
+        }
+
+        const messages = await ChatMessage.find({ idChat: chatId }).populate({
+            path: 'idMessage',
+            populate: {
+                path: 'idUser',
+                select: 'username'
+            }
+        }).populate({
+            path: 'idMessage',
+            populate: {
+                path: 'idMultimedia',
+                select: 'url'
+            }
+        });
+
+        const formattedMessages = messages.map(chatMessage => {
+            const message = chatMessage.idMessage;
+            return {
+                description: typeof message.description === 'string' ? message.description : JSON.parse(message.description).join(' '),
+                visto: message.visto,
+                sender: message.idUser.username,
+                multimedia: message.idMultimedia ? message.idMultimedia.url : null
+            };
+        });
+
+        res.status(200).json({
+            message: {
+                description: 'Chats obtenidos exitosamente',
+                code: 0
+            },
+            data: {
+                name: chat.name,
+                users: chat.users.map(user => ({
+                    _id: {
+                        username: user.username,
+                        id: user._id
+                    }
+                })),
+                status: chat.status,
+                messages: formattedMessages,
+                no_vistos: formattedMessages.filter(msg => !msg.visto).length
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching chat messages:', error);
+        res.status(500).json({
+            message: {
+                description: 'Error al obtener los mensajes del chat',
+                code: 1
+            }
+        });
+    }
 });
