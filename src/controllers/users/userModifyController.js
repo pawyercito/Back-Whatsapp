@@ -32,8 +32,18 @@ export const modify = async (req, res) => {
       if (bio !== undefined) user.profile.bio = bio;
       if (website !== undefined) user.profile.website = website;
       if (location !== undefined) user.profile.location = location;
-      if (username !== undefined) user.username = username;
-      if (email !== undefined) user.email = email;
+      // Antes de asignar el valor a user.username, verifica si username es un arreglo
+if (username !== undefined) {
+  // Verifica si username es un arreglo y extrae el primer elemento, de lo contrario usa el valor directamente
+  const userUsername = Array.isArray(username) ? username[0] : username;
+  user.username = userUsername;
+}
+      // Antes de asignar el valor a user.email, verifica si email es un arreglo
+if (email !== undefined) {
+  // Verifica si email es un arreglo y extrae el primer elemento, de lo contrario usa el valor directamente
+  const userEmail = Array.isArray(email) ? email[0] : email;
+  user.email = userEmail;
+}
 
       // Assuming `password` is extracted from `fields`
 if (password !== undefined) {
