@@ -88,7 +88,8 @@ io.on('connection', (socket) => {
         idChat: chatId,
         idMessage: message._id,
         description: messageDescription,
-        idUser: userId
+        idUser: userId,
+        multimedia: null // No hay multimedia en este caso
       });
     } catch (error) {
       console.error('Error guardando el mensaje:', error);

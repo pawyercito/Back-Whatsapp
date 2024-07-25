@@ -46,7 +46,11 @@ router.get('/my-chats', authenticateUser, async (req, res) => {
                 },
                 {
                     path: 'idMultimedia',
-                    select: 'url'
+                    select: 'url idTypeMultimedia',
+                    populate: {
+                        path: 'idTypeMultimedia',
+                        select: 'type'
+                    }
                 }
             ]
         });
@@ -62,8 +66,14 @@ router.get('/my-chats', authenticateUser, async (req, res) => {
                         ? chatMessage.idMessage.description 
                         : JSON.parse(chatMessage.idMessage.description).join(' '),
                     visto: chatMessage.idMessage.visto,
-                    sender: chatMessage.idMessage.idUser.username,
-                    multimedia: chatMessage.idMessage.idMultimedia ? chatMessage.idMessage.idMultimedia.url : null
+                    sender: {
+                        username: chatMessage.idMessage.idUser.username,
+                        id: chatMessage.idMessage.idUser._id
+                    },
+                    multimedia: chatMessage.idMessage.idMultimedia ? {
+                        url: chatMessage.idMessage.idMultimedia.url,
+                        type: chatMessage.idMessage.idMultimedia.idTypeMultimedia.type
+                    } : null
                 }));
 
             const noVistos = messages.filter(message => !message.visto).length;
@@ -92,6 +102,28 @@ router.get('/my-chats', authenticateUser, async (req, res) => {
         res.status(500).json({
             message: { description: 'Error al obtener los chats', error, code: 1 }
         });
+    }
+});
+
+// Endpoint para verificar si un chat privado ya existe
+router.get('/exists/:userId', authenticateUser, async (req, res) => {
+    try {
+        const userId1 = req.user._id; // Usuario logueado
+        const userId2 = req.params.userId; // Usuario pasado por el frontend
+
+        // Buscar un chat privado que solo tenga estos dos usuarios
+        const chat = await Chat.findOne({
+            idUser: { $all: [userId1, userId2], $size: 2 }
+        });
+
+        if (chat) {
+            return res.json({ exists: true });
+        } else {
+            return res.json({ exists: false });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: 'Error interno del servidor' });
     }
 });
 

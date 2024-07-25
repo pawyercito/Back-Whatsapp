@@ -91,12 +91,20 @@ export const handleMultimediaMessage = async (req, res) => {
 
             if (multimediaFiles.length > 0) {
                 const file = multimediaFiles[0];
-                const type = file.mimetype.includes('image') ? 'image' : 'audio'; // Adjust according to your needs
+                let type;
+                if (file.mimetype.startsWith('image/')) {
+                    type = 'image';
+                } else if (['audio/mpeg', 'audio/mp3'].includes(file.mimetype)) {
+                    type = 'audio';
+                } else {
+                    throw new Error('Tipo de archivo no soportado');
+                }
+
                 const url = await handleFileUpload(file, type);
 
                 const typeMultimedia = await TypeMultimedia.findOne({ type });
                 if (!typeMultimedia) {
-                    throw new Error('Tipo de multimedia no encontrado');
+                    throw new Error('Tipo de multimedial no encontrado');
                 }
 
                 const multimedia = new Multimedia({
@@ -114,6 +122,7 @@ export const handleMultimediaMessage = async (req, res) => {
                 idUser: userId,
                 description: messageDescription,
                 idMultimedia: multimediaData ? multimediaData._id : null,
+                idTypeMultimedia: multimediaData ? multimediaData.idTypeMultimedia : null,
                 visto: false
             });
 
@@ -135,10 +144,24 @@ export const handleMultimediaMessage = async (req, res) => {
                 multimedia: multimediaData ? multimediaData.url : null
             });
 
-            res.status(201).json({ message: 'Mensaje enviado exitosamente' });
+            // Crear el objeto con todos los campos del mensaje para enviar en la respuesta
+            const messageToSend = {
+                idChat: chatId,
+                idMessage: message._id,
+                description: messageDescription,
+                idUser: userId,
+                multimedia: multimediaData ? multimediaData.url : null,
+                ...message.toObject() // Spread operator to include all message fields
+            };
+
+            // Imprimir en consola la respuesta completa antes de enviarla
+            console.log("Mensaje enviado exitosamente:", messageToSend);
+
+            res.status(201).json(messageToSend); // Enviar todos los campos del mensaje junto con la respuesta de éxito
         } catch (error) {
-            console.error('Error handling multimedia message:', error);
+            console.error('Error handling multimediall mensaje:', error);
             res.status(500).json({ message: 'Error al enviar el mensaje' });
         }
     });
+
 };
