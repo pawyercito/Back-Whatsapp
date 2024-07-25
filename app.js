@@ -22,7 +22,12 @@ configDotenv();
 const app = express();
 const server = http.createServer(app);
 // After initializing io
-export const io = new Server(server);
+export const io = new Server(server, {
+  cors: {
+      origin: '*'
+  }
+});
+
 const PORT = process.env.PORT ?? 4000;
 
 // Conexión a la base de datos
@@ -57,6 +62,8 @@ app.post('/api/messages/multimedia', handleMultimediaMessage);
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+
 
 // Lógica de Socket.IO
 io.on('connection', (socket) => {
