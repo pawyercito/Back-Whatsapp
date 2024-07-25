@@ -15,26 +15,38 @@ export const addFriends = async (req, res) => {
     }
 
     const senderId = req.user.id;
+    const warningDescriptions = [];
 
     for (const friendId of friendIds) {
       // Check if a friend request already exists
       const existingRequest = await FriendRequest.findOne({
         sender: senderId,
-        receiver: friendId,
-        status: 'pending'
-      });
-
-      if (existingRequest) {
-        continue; // Skip this friendId if a pending request already exists
-      }
-
-      // Create a new friend request
-      const friendRequest = new FriendRequest({
-        sender: senderId,
         receiver: friendId
       });
 
-      await friendRequest.save();
+      if (existingRequest && existingRequest.status === 'pending') {
+        warningDescriptions.push(`Ya existe una solicitud de amistad pendiente para el usuario`);
+        continue; // Skip this friendId if a pending request already exists
+      }
+
+      // Create a new friend request if it doesn't already exist
+      if (!existingRequest) {
+        const friendRequest = new FriendRequest({
+          sender: senderId,
+          receiver: friendId
+        });
+
+        await friendRequest.save();
+      }
+    }
+
+    if (warningDescriptions.length > 0) {
+      return res.json({
+        message: {
+          description: `Algunas solicitudes de amistad no se pudieron enviar: ${warningDescriptions.join(', ')}`,
+          code: 3
+        }
+      });
     }
 
     res.json({

@@ -11,7 +11,7 @@ const router = express.Router();
 router.post('/upload', authenticateUser, handleEstadoUpload);
 
 
-// Endpoint para obtener los estados de los amigos del usuario autenticado
+
 // Endpoint para obtener los estados de los amigos del usuario autenticado
 router.get('/friends-states', authenticateUser, async (req, res) => {
     try {
@@ -43,18 +43,19 @@ router.get('/friends-states', authenticateUser, async (req, res) => {
 
         // Agrupar estados por usuario
         const estadosData = allStates.reduce((acc, estado) => {
-            const { username } = estado.idUser;
+            const { _id: userId, username } = estado.idUser;
             const { description } = estado;
             const multimedia = estado.idMultimedia ? estado.idMultimedia.url : null;
 
-            if (!acc[username]) {
-                acc[username] = {
+            if (!acc[userId]) {
+                acc[userId] = {
                     username,
+                    id: userId,
                     states: []
                 };
             }
 
-            acc[username].states.push({
+            acc[userId].states.push({
                 description,
                 multimedia
             });
@@ -78,6 +79,7 @@ router.get('/friends-states', authenticateUser, async (req, res) => {
         });
     }
 });
+
 
 
 

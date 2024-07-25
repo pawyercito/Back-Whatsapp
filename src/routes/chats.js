@@ -8,7 +8,7 @@ import { authenticateUser } from '../../middleware_auth.js';
 const router = express.Router();
 
 // Endpoint para crear un nuevo chat
-router.post('/create', async (req, res) => {
+router.post('/create', authenticateUser, async (req, res) => {
     const { idUser, name, status } = req.body;
 
     try {
@@ -19,7 +19,20 @@ router.post('/create', async (req, res) => {
         });
 
         await chat.save();
-        res.status(201).json({ chatId: chat._id });
+
+        // Usamos populate para incluir el username del usuario relacionado
+        const populatedChat = await Chat.findById(chat._id).populate({
+            path: 'idUser',
+            select: 'username'
+        });
+
+        res.status(201).json({
+            chatId: populatedChat._id,
+            users: [{
+                id: populatedChat.idUser,
+                username: populatedChat.idUser.username
+            }]
+        });
     } catch (error) {
         res.status(500).json({ message: 'Error al crear el chat', error });
     }
@@ -28,11 +41,19 @@ router.post('/create', async (req, res) => {
 // Endpoint para obtener todos los chats del usuario autenticado
 router.get('/my-chats', authenticateUser, async (req, res) => {
     try {
-        // Encuentra todos los chats del usuario autenticado
+        console.log('Usuario autenticado:', req.user._id);
+
+        // Encuentra todos los chats donde el usuario autenticado está presente
         const chats = await Chat.find({ idUser: req.user._id })
             .populate('idUser', 'username'); // Incluye detalles de los usuarios
 
         console.log('Chats encontrados:', chats);
+
+        // Verifica si se encontraron chats
+        if (chats.length === 0) {
+            console.log('No se encontraron chats para el usuario:', req.user._id);
+        }
+        console.log(chats);
 
         // Obtén todos los mensajes de los chats encontrados
         const chatMessages = await ChatMessage.find({
@@ -54,8 +75,6 @@ router.get('/my-chats', authenticateUser, async (req, res) => {
                 }
             ]
         });
-
-        console.log('ChatMessages encontrados:', chatMessages);
 
         // Agrupa los mensajes por chat
         const chatWithMessages = await Promise.all(chats.map(async (chat) => {
@@ -84,6 +103,7 @@ router.get('/my-chats', authenticateUser, async (req, res) => {
             }));
 
             return {
+                id: chat._id, // Agregar el id del chat
                 name: chat.name,
                 users: users,
                 status: chat.status,
@@ -99,11 +119,13 @@ router.get('/my-chats', authenticateUser, async (req, res) => {
             data: chatWithMessages
         });
     } catch (error) {
+        console.error('Error al obtener los chats:', error);
         res.status(500).json({
             message: { description: 'Error al obtener los chats', error, code: 1 }
         });
     }
 });
+
 
 // Endpoint para verificar si un chat privado ya existe
 router.get('/exists/:userId', authenticateUser, async (req, res) => {
