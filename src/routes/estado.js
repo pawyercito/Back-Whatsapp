@@ -12,6 +12,7 @@ router.post('/upload', authenticateUser, handleEstadoUpload);
 
 
 // Endpoint para obtener los estados de los amigos del usuario autenticado
+// Endpoint para obtener los estados de los amigos del usuario autenticado
 router.get('/friends-states', authenticateUser, async (req, res) => {
     try {
         const userId = req.user._id;
@@ -38,16 +39,36 @@ router.get('/friends-states', authenticateUser, async (req, res) => {
             .populate('idMultimedia', 'url');
 
         // Combina los estados de amigos y del usuario autenticado
-        const estadosData = [...friendStates, ...userStates].map(estado => ({
-            description: estado.description,
-            multimedia: estado.idMultimedia ? estado.idMultimedia.url : null,
-            username: estado.idUser.username
-        }));
+        const allStates = [...friendStates, ...userStates];
+
+        // Agrupar estados por usuario
+        const estadosData = allStates.reduce((acc, estado) => {
+            const { username } = estado.idUser;
+            const { description } = estado;
+            const multimedia = estado.idMultimedia ? estado.idMultimedia.url : null;
+
+            if (!acc[username]) {
+                acc[username] = {
+                    username,
+                    states: []
+                };
+            }
+
+            acc[username].states.push({
+                description,
+                multimedia
+            });
+
+            return acc;
+        }, {});
+
+        // Convertir el objeto de estados agrupados en un array
+        const estadosArray = Object.values(estadosData);
 
         res.status(200).json({
             message: { description: 'Estados obtenidos exitosamente', code: 0 },
             data: {
-                states: estadosData
+                states: estadosArray
             }
         });
     } catch (error) {
@@ -57,6 +78,7 @@ router.get('/friends-states', authenticateUser, async (req, res) => {
         });
     }
 });
+
 
 
 
